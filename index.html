@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>本格一人麻雀 - オンラインランキング対応</title>
+  <title>本格一人麻雀 - ダブル役満＆オートツモ切り対応</title>
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -180,11 +180,23 @@
       border-radius: 6px;
       cursor: pointer;
       box-shadow: 0 4px 0 #b9770e;
+      transition: background-color 0.2s, box-shadow 0.2s;
     }
     button:hover { background-color: #f5b041; }
     button:active { transform: translateY(2px); box-shadow: 0 2px 0 #b9770e; }
     button:disabled { background-color: #7f8c8d; box-shadow: 0 4px 0 #5f6a6a; cursor: not-allowed; opacity: 0.6; }
     button.btn-riichi { background-color: #e74c3c; box-shadow: 0 4px 0 #922b21; }
+
+    /* アガリボタン発光スタイル */
+    button.btn-win-glow {
+      background-color: #e74c3c !important;
+      box-shadow: 0 4px 0 #922b21 !important;
+      animation: winGlow 0.8s infinite alternate;
+    }
+    @keyframes winGlow {
+      0% { transform: scale(1); box-shadow: 0 0 5px #e74c3c, 0 4px 0 #922b21; }
+      100% { transform: scale(1.08); box-shadow: 0 0 20px #f1c40f, 0 4px 0 #922b21; }
+    }
 
     .result-box {
       margin-top: 15px;
@@ -235,7 +247,7 @@
 
       <div class="controls">
         <button id="btn-riichi" class="btn-riichi" onclick="startRiichiSelect()" disabled>リーチ</button>
-        <button onclick="checkAgari()">ツモアガリ</button>
+        <button id="btn-win" onclick="checkAgari()">ツモアガリ</button>
         <button onclick="sortHand()">理牌（整理）</button>
         <button onclick="initGame()">最初から</button>
       </div>
@@ -255,7 +267,7 @@
 
   <script>
     // ==========================================
-    // ⚙️ SUPABASE 接続設定（ご自身のキーに差し替えてください）
+    // ⚙️ SUPABASE 接続設定
     // ==========================================
     const SUPABASE_URL = 'https://fxexiflthgohhqafddhr.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_0iMq0Jf5FmetEP1Ktw2VYg_W3lGJmjz';
@@ -371,6 +383,21 @@
         return;
       }
       drawnTile = deck.pop();
+
+      // リーチ中の自動動作
+      if (isRiichi && !isGameOver) {
+        const full14 = [...hand, drawnTile];
+        if (checkWin(full14)) {
+          // アガリ形が完成した場合はツモ切らずアガリ可能状態を通知
+          render();
+        } else {
+          // アガれなければ0.4秒後に自動ツモ切り
+          render();
+          setTimeout(() => {
+            if (!isGameOver) discard(null, true);
+          }, 400);
+        }
+      }
     }
 
     function sortTiles(arr) {
@@ -449,6 +476,7 @@
     function checkWin(tiles14) {
       let counts = getTileCounts(tiles14);
 
+      // 七対子
       let pairCount = 0, isChitoi = true;
       for (let k in counts) {
         if (counts[k] === 2) pairCount++;
@@ -456,6 +484,7 @@
       }
       if (isChitoi && pairCount === 7) return true;
 
+      // 国士無双
       let yaochuTypes = 0, hasPair = false;
       for (let k of YAOCHU_KEYS) {
         if (counts[k] >= 1) yaochuTypes++;
@@ -463,6 +492,7 @@
       }
       if (yaochuTypes === 13 && hasPair && Object.keys(counts).every(k => YAOCHU_KEYS.includes(k) ? counts[k] <= 2 : counts[k] === 0)) return true;
 
+      // 通常形
       for (let k in counts) {
         if (counts[k] >= 2) {
           counts[k] -= 2;
@@ -503,21 +533,96 @@
       return counts;
     }
 
+    // --- ダブル役満＆役満評価ロジック ---
     function evaluateHand(tiles14, isRiichiActive) {
       let counts = getTileCounts(tiles14);
       let yakus = [];
-      let isYakuman = false;
 
-      let yaochuTypes = 0, hasPair = false;
+      // 国士無双 判定
+      let yaochuTypes = 0, hasPair = false, kokushiPairKey = null;
       for (let k of YAOCHU_KEYS) {
         if (counts[k] >= 1) yaochuTypes++;
-        if (counts[k] === 2) hasPair = true;
+        if (counts[k] === 2) { hasPair = true; kokushiPairKey = k; }
       }
-      if (yaochuTypes === 13 && hasPair) { yakus.push({ name: '国士無双', han: 13 }); isYakuman = true; }
-      if (counts['z_5'] >= 3 && counts['z_6'] >= 3 && counts['z_7'] >= 3) { yakus.push({ name: '大三元', han: 13 }); isYakuman = true; }
+      if (yaochuTypes === 13 && hasPair) {
+        // 十三面待ち判定 (ツモ牌が雀頭になったか)
+        if (drawnTile && `${drawnTile.type}_${drawnTile.val}` === kokushiPairKey) {
+          yakus.push({ name: '国士無双十三面待ち', han: 26, isDouble: true });
+        } else {
+          yakus.push({ name: '国士無双', han: 13 });
+        }
+      }
 
-      if (isYakuman) return { yakus, rawScore: 32000, scoreText: '役満 32000点' };
+      // 大三元
+      if (counts['z_5'] >= 3 && counts['z_6'] >= 3 && counts['z_7'] >= 3) {
+        yakus.push({ name: '大三元', han: 13 });
+      }
 
+      // 字一色
+      if (Object.keys(counts).every(k => k.startsWith('z') || counts[k] === 0)) {
+        yakus.push({ name: '字一色', han: 13 });
+      }
+
+      // 大四喜 / 小四喜
+      let windKotsu = 0, windPair = 0;
+      ['z_1','z_2','z_3','z_4'].forEach(k => {
+        if (counts[k] >= 3) windKotsu++;
+        if (counts[k] === 2) windPair++;
+      });
+      if (windKotsu === 4) {
+        yakus.push({ name: '大四喜', han: 26, isDouble: true });
+      } else if (windKotsu === 3 && windPair === 1) {
+        yakus.push({ name: '小四喜', han: 13 });
+      }
+
+      // 清老頭
+      const chinrotoKeys = ['m_1','m_9','p_1','p_9','s_1','s_9'];
+      if (Object.keys(counts).every(k => chinrotoKeys.includes(k) || counts[k] === 0)) {
+        yakus.push({ name: '清老頭', han: 13 });
+      }
+
+      // 四暗刻 / 四暗刻単騎
+      let kotsuCount = 0;
+      for (let k in counts) if (counts[k] >= 3) kotsuCount++;
+      if (kotsuCount === 4) {
+        if (drawnTile && counts[`${drawnTile.type}_${drawnTile.val}`] === 2) {
+          yakus.push({ name: '四暗刻単騎', han: 26, isDouble: true });
+        } else {
+          yakus.push({ name: '四暗刻', han: 13 });
+        }
+      }
+
+      // 九蓮宝燈 / 純正九蓮宝燈
+      ['m', 'p', 's'].forEach(suit => {
+        let isSuitOnly = Object.keys(counts).every(k => k.startsWith(suit) || counts[k] === 0);
+        if (isSuitOnly) {
+          let req = [3, 1, 1, 1, 1, 1, 1, 1, 3];
+          let current = [1,2,3,4,5,6,7,8,9].map(n => counts[`${suit}_${n}`] || 0);
+          let match = true;
+          for (let i = 0; i < 9; i++) if (current[i] < req[i]) match = false;
+          if (match) {
+            let drawnVal = drawnTile ? drawnTile.val : 0;
+            // 単騎待ち(純正)判定
+            if (drawnVal > 0 && current[drawnVal - 1] === req[drawnVal - 1] + 1) {
+              yakus.push({ name: '純正九蓮宝燈', han: 26, isDouble: true });
+            } else {
+              yakus.push({ name: '九蓮宝燈', han: 13 });
+            }
+          }
+        }
+      });
+
+      // 役満が1つ以上あれば役満点数計算へ
+      if (yakus.length > 0) {
+        let doubleCount = 0;
+        yakus.forEach(y => { doubleCount += (y.isDouble ? 2 : 1); });
+
+        let rawScore = 32000 * doubleCount;
+        let scoreText = doubleCount > 1 ? `ダブル役満 ${rawScore}点` : `役満 32000点`;
+        return { yakus, rawScore, scoreText };
+      }
+
+      // --- 通常役判定 ---
       yakus.push({ name: '門前清自摸和', han: 1 });
       if (isRiichiActive) yakus.push({ name: '立直', han: 1 });
 
@@ -589,8 +694,8 @@
         let yakuStr = res.yakus.map(y => `${y.name}`).join('・');
         showMessage(`🎉 ツモアガリ！（${turn}巡目）`, yakuStr, res.scoreText);
         isGameOver = true;
+        render();
 
-        // 名前入力とオンライン送信
         let playerName = prompt('🎉 素晴らしいアガリです！ランキングに登録する名前を入力してください:', '名無し雀士');
         if (playerName) {
           await saveGlobalScore(playerName, turn, res.rawScore, res.scoreText, yakuStr);
@@ -603,10 +708,7 @@
 
     // --- オンラインランキング通信処理 (Supabase) ---
     async function saveGlobalScore(playerName, turnNum, scoreVal, scoreText, yakuText) {
-      if (!supabaseClient) {
-        alert('Supabaseのキーが設定されていないため、ローカル保存のみ行います。');
-        return;
-      }
+      if (!supabaseClient) return;
 
       let calcPoint = Math.round((scoreVal * 10) / Math.sqrt(turnNum));
 
@@ -623,7 +725,6 @@
 
       if (error) {
         console.error('送信エラー:', error);
-        alert('スコアの保存に失敗しました。');
       } else {
         fetchGlobalRanking();
       }
@@ -631,10 +732,7 @@
 
     async function fetchGlobalRanking() {
       const listEl = document.getElementById('ranking-list');
-      if (!supabaseClient) {
-        listEl.innerHTML = '<li class="ranking-item" style="text-align:center;">APIキー未設定</li>';
-        return;
-      }
+      if (!supabaseClient) return;
 
       const { data, error } = await supabaseClient
         .from('mahjong_scores')
@@ -690,6 +788,15 @@
       const full14 = [...hand];
       if (drawnTile) full14.push(drawnTile);
 
+      // アガリ可能状態のチェック＆ボタン発光制御
+      const btnWin = document.getElementById('btn-win');
+      if (full14.length === 14 && checkWin(full14) && !isGameOver) {
+        btnWin.classList.add('btn-win-glow');
+      } else {
+        btnWin.classList.remove('btn-win-glow');
+      }
+
+      // リーチ可能判定
       let riichiDiscardIndices = [];
       if (!isRiichi && !isGameOver && full14.length === 14) {
         riichiDiscardIndices = getTenpaiDiscards(hand, drawnTile);
