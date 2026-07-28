@@ -2,26 +2,34 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>本格一人麻雀 - 完全版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>一人麻雀-NextFeed-</title>
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
     body {
       background-color: #0b5345;
       color: #ffffff;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       margin: 0;
-      padding: 20px;
+      padding: 10px;
     }
-    h1 { margin-bottom: 10px; font-size: 24px; }
+    h1 {
+      margin: 5px 0 10px 0;
+      font-size: 20px;
+      text-align: center;
+    }
     
     .game-layout {
       display: flex;
-      gap: 20px;
+      gap: 15px;
       max-width: 1200px;
       width: 100%;
       flex-wrap: wrap;
@@ -30,207 +38,255 @@
 
     .game-board {
       background-color: #117a65;
-      border: 8px solid #7e5109;
+      border: 4px solid #7e5109;
       border-radius: 12px;
       flex: 1;
-      min-width: 680px;
-      padding: 20px;
-      box-sizing: border-box;
+      width: 100%;
+      max-width: 800px;
+      padding: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+      position: relative;
     }
 
     .ranking-board {
       background-color: #145a32;
-      border: 6px solid #7e5109;
+      border: 4px solid #7e5109;
       border-radius: 12px;
-      width: 320px;
-      padding: 15px;
-      box-sizing: border-box;
+      width: 100%;
+      max-width: 800px;
+      padding: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.4);
     }
     .ranking-board h2 {
-      font-size: 18px;
+      font-size: 16px;
       margin-top: 0;
       color: #f1c40f;
       text-align: center;
       border-bottom: 2px solid #27ae60;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
     }
     .ranking-list { list-style: none; padding: 0; margin: 0; }
     .ranking-item {
       background: rgba(0,0,0,0.25);
-      margin-bottom: 8px;
-      padding: 8px 10px;
+      margin-bottom: 6px;
+      padding: 6px 8px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12px;
     }
     .ranking-item .rank-head { font-weight: bold; color: #f39c12; display: flex; justify-content: space-between; }
-    .ranking-item .rank-player { color: #ffffff; font-size: 12px; margin-top: 2px; }
-    .ranking-item .rank-detail { font-size: 11px; color: #bdc3c7; margin-top: 2px; }
+    .ranking-item .rank-player { color: #ffffff; font-size: 11px; margin-top: 2px; }
+    .ranking-item .rank-detail { font-size: 10px; color: #bdc3c7; margin-top: 2px; }
 
     .info-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: rgba(0, 0, 0, 0.3);
-      padding: 10px 15px;
+      padding: 8px 10px;
       border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 14px;
+      margin-bottom: 10px;
+      font-size: 12px;
       font-weight: bold;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 6px;
     }
-    .dora-area { display: flex; align-items: center; gap: 6px; }
+    .dora-area { display: flex; align-items: center; gap: 4px; }
 
     .tenpai-info-bar {
       background: rgba(241, 196, 15, 0.2);
       border: 1px solid #f1c40f;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 6px;
-      margin-bottom: 15px;
-      font-size: 14px;
+      margin-bottom: 10px;
+      font-size: 12px;
       color: #f1c40f;
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-height: 24px;
+      gap: 6px;
+      min-height: 38px;
     }
 
     .status-badge {
       background-color: #e74c3c;
       color: white;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 11px;
       display: none;
     }
     .river-section {
-      min-height: 110px;
+      min-height: 90px;
       background: rgba(0,0,0,0.15);
       border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 15px;
+      padding: 8px;
+      margin-bottom: 10px;
     }
-    .river-title { font-size: 12px; color: #abebc6; margin-bottom: 5px; }
-    .tile-container { display: flex; flex-wrap: wrap; gap: 6px; }
+    .river-title { font-size: 11px; color: #abebc6; margin-bottom: 4px; }
+    .tile-container { display: flex; flex-wrap: wrap; gap: 3px; }
     
     .hand-section {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 15px;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 10px;
+      touch-action: manipulation;
     }
+    .hand-tiles-area {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 2px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    /* 牌の基本スタイル */
     .tile {
-      width: 42px;
-      height: 60px;
+      width: calc((100vw - 70px) / 14);
+      max-width: 40px;
+      min-width: 22px;
+      height: 52px;
       background: #ffffff;
       color: #333;
-      border-radius: 6px;
-      border-bottom: 5px solid #d5dbdb;
-      box-shadow: 2px 3px 5px rgba(0,0,0,0.3);
+      border-radius: 4px;
+      border-bottom: 3px solid #d5dbdb;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       cursor: pointer;
       user-select: none;
-      transition: transform 0.1s, background-color 0.1s;
       font-weight: bold;
       position: relative;
+      flex-shrink: 0;
     }
-    .tile:hover { transform: translateY(-5px); background-color: #f9e79f; }
+    .tile:active { transform: translateY(-3px); background-color: #f9e79f; }
     .tile.riichi-target {
       border: 2px solid #e74c3c;
       animation: pulse 1s infinite;
     }
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+      70% { box-shadow: 0 0 0 8px rgba(231, 76, 60, 0); }
       100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
     }
     .tile.red { color: #c0392b; }
     .tile.green { color: #27ae60; }
     .tile.black { color: #2c3e50; }
     .tile.aka-dora { background-color: #fadbd8; }
-    .tile-num { font-size: 18px; line-height: 1; }
-    .tile-type { font-size: 11px; margin-top: 2px; }
+    .tile-num { font-size: 15px; line-height: 1; }
+    .tile-type { font-size: 9px; margin-top: 1px; }
+
+    /* 小さい牌用 (河・ドラ・待ち牌) */
+    .tile.small {
+      width: 24px;
+      height: 34px;
+      border-bottom: 2px solid #d5dbdb;
+    }
+    .tile.small .tile-num { font-size: 11px; }
+    .tile.small .tile-type { font-size: 8px; }
 
     .drawn-tile-area {
       border-left: 2px dashed rgba(255,255,255,0.4);
-      padding-left: 15px;
+      padding-left: 6px;
+      flex-shrink: 0;
     }
 
     .controls {
-      margin-top: 20px;
+      margin-top: 15px;
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 6px;
       flex-wrap: wrap;
     }
     button {
       background-color: #f39c12;
       border: none;
       color: white;
-      padding: 10px 16px;
-      font-size: 14px;
+      padding: 8px 12px;
+      font-size: 13px;
       font-weight: bold;
       border-radius: 6px;
       cursor: pointer;
-      box-shadow: 0 4px 0 #b9770e;
-      transition: background-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 3px 0 #b9770e;
+      touch-action: manipulation;
     }
-    button:hover { background-color: #f5b041; }
-    button:active { transform: translateY(2px); box-shadow: 0 2px 0 #b9770e; }
-    button:disabled { background-color: #7f8c8d; box-shadow: 0 4px 0 #5f6a6a; cursor: not-allowed; opacity: 0.6; }
-    button.btn-riichi { background-color: #e74c3c; box-shadow: 0 4px 0 #922b21; }
-    button.btn-kan { background-color: #8e44ad; box-shadow: 0 4px 0 #5b2c6f; }
+    button:active { transform: translateY(2px); box-shadow: 0 1px 0 #b9770e; }
+    button:disabled { background-color: #7f8c8d; box-shadow: 0 3px 0 #5f6a6a; cursor: not-allowed; opacity: 0.6; }
+    button.btn-riichi { background-color: #e74c3c; box-shadow: 0 3px 0 #922b21; }
+    button.btn-kan { background-color: #8e44ad; box-shadow: 0 3px 0 #5b2c6f; }
+
+    /* X(Twitter)ボタン用スタイル */
+    button.btn-x-share {
+      background-color: #000000;
+      box-shadow: 0 3px 0 #333333;
+      color: #ffffff;
+    }
+    button.btn-x-share:hover {
+      background-color: #1a1a1a;
+    }
 
     button.btn-win-glow {
       background-color: #e74c3c !important;
-      box-shadow: 0 4px 0 #922b21 !important;
+      box-shadow: 0 3px 0 #922b21 !important;
       animation: winGlow 0.8s infinite alternate;
     }
     @keyframes winGlow {
-      0% { transform: scale(1); box-shadow: 0 0 5px #e74c3c, 0 4px 0 #922b21; }
-      100% { transform: scale(1.08); box-shadow: 0 0 20px #f1c40f, 0 4px 0 #922b21; }
+      0% { transform: scale(1); box-shadow: 0 0 5px #e74c3c; }
+      100% { transform: scale(1.05); box-shadow: 0 0 15px #f1c40f; }
     }
 
     .result-box {
-      margin-top: 15px;
+      margin-top: 12px;
       background: rgba(0,0,0,0.4);
       border-radius: 8px;
-      padding: 12px;
+      padding: 8px;
       text-align: center;
-      min-height: 45px;
+      min-height: 40px;
     }
-    .result-title { font-size: 18px; font-weight: bold; color: #f1c40f; }
-    .yaku-list { margin: 6px 0; font-size: 14px; color: #ecf0f1; }
-    .score-detail { font-size: 16px; color: #2ecc71; font-weight: bold; }
+    .result-title { font-size: 16px; font-weight: bold; color: #f1c40f; }
+    .yaku-list { margin: 4px 0; font-size: 12px; color: #ecf0f1; }
+    .score-detail { font-size: 14px; color: #2ecc71; font-weight: bold; }
+
+    /* カン選択モーダル */
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      z-index: 100;
+    }
+    .modal-title { font-size: 16px; font-weight: bold; color: #f1c40f; }
+    .modal-options { display: flex; gap: 15px; }
   </style>
 </head>
 <body>
 
-  <h1>本格一人麻雀 - 完全版</h1>
+  <h1>本格一人麻雀 - オンライン</h1>
 
   <div class="game-layout">
-    <div class="game-board">
+    <div class="game-board" id="game-board">
       <div class="info-bar">
         <div>自風: <span style="color:#f1c40f;">東家（親）</span></div>
-        <div>残り: <span id="deck-count">0</span> 牌</div>
+        <div>残り: <span id="deck-count">0</span></div>
         <div>巡目: <span id="turn-count">1</span></div>
         <div class="dora-area">
-          <span>ドラ表示:</span>
-          <div id="dora-tile-container" style="display:flex; gap:4px;"></div>
+          <span>ドラ:</span>
+          <div id="dora-tile-container" style="display:flex; gap:2px;"></div>
         </div>
         <div id="riichi-badge" class="status-badge">立直中</div>
       </div>
 
       <!-- アガリ牌（待ち牌）表示エリア -->
       <div class="tenpai-info-bar" id="tenpai-info-bar">
-        <span>待ち牌:</span>
-        <div id="waits-container" style="display:flex; gap:4px;">なし</div>
+        <span>待ち:</span>
+        <div id="waits-container" style="display:flex; gap:2px; flex-wrap:wrap;">なし</div>
       </div>
 
       <div class="river-section">
@@ -239,9 +295,9 @@
       </div>
 
       <div class="hand-section">
-        <div id="hand" class="tile-container"></div>
+        <div id="hand" class="hand-tiles-area"></div>
         <div class="drawn-tile-area">
-          <div id="drawn-tile" class="tile-container"></div>
+          <div id="drawn-tile"></div>
         </div>
       </div>
 
@@ -252,11 +308,19 @@
       </div>
 
       <div class="controls">
-        <button id="btn-kan" class="btn-kan" onclick="execKan()" style="display:none;">カン</button>
+        <button id="btn-kan" class="btn-kan" onclick="onClickKanButton()" style="display:none;">カン</button>
         <button id="btn-riichi" class="btn-riichi" onclick="startRiichiSelect()" disabled>リーチ</button>
         <button id="btn-win" onclick="checkAgari()">ツモアガリ</button>
-        <button onclick="sortHand()">理牌（整理）</button>
+        <button onclick="sortHand()">理牌</button>
+        <button class="btn-x-share" onclick="shareOnX()">𝕏 で共有</button>
         <button onclick="initGame()">最初から</button>
+      </div>
+
+      <!-- カン選択用ダイアログ -->
+      <div id="kan-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-title">どの牌をカンしますか？</div>
+        <div class="modal-options" id="kan-options"></div>
+        <button onclick="closeKanModal()" style="background:#7f8c8d; box-shadow:none; margin-top:5px;">キャンセル</button>
       </div>
     </div>
 
@@ -266,8 +330,8 @@
       <ol class="ranking-list" id="ranking-list">
         <li class="ranking-item" style="text-align:center;">読み込み中...</li>
       </ol>
-      <div style="text-align: center; margin-top: 15px;">
-        <button onclick="fetchGlobalRanking()" style="padding: 6px 12px; font-size: 12px;">更新</button>
+      <div style="text-align: center; margin-top: 10px;">
+        <button onclick="fetchGlobalRanking()" style="padding: 4px 10px; font-size: 11px;">更新</button>
       </div>
     </div>
   </div>
@@ -335,11 +399,11 @@
     const YAOCHU_KEYS = ['m_1','m_9','p_1','p_9','s_1','s_9','z_1','z_2','z_3','z_4','z_5','z_6','z_7'];
 
     let deck = [], hand = [], drawnTile = null, river = [];
-    let doraIndicators = []; // ドラ表示牌（最大5枚）
-    let actualDoraTiles = []; // 実際のドラ牌リスト
-    let kanCount = 0; // カンした回数
+    let doraIndicators = [], actualDoraTiles = [];
+    let kanCount = 0;
     let turn = 1;
     let isRiichi = false, isRiichiSelecting = false, isGameOver = false;
+    let lastWinResult = null; // X共有用のアガリ結果保持用
     let autoDiscardTimer = null;
 
     function createDeck() {
@@ -372,11 +436,13 @@
       deck = createDeck();
       hand = []; river = []; turn = 1; kanCount = 0;
       isRiichi = false; isRiichiSelecting = false; isGameOver = false;
+      lastWinResult = null;
 
       doraIndicators = [deck.pop()];
       actualDoraTiles = [getDoraFromIndicator(doraIndicators[0])];
 
       document.getElementById('riichi-badge').style.display = 'none';
+      closeKanModal();
       clearMessages();
 
       for (let i = 0; i < 13; i++) hand.push(deck.pop());
@@ -395,14 +461,13 @@
       }
       drawnTile = deck.pop();
 
-      // リーチ中の自動ツモ切り予約
       if (isRiichi && !isGameOver) {
-        const full14 = [...hand, drawnTile];
-        if (!checkWin(full14)) {
+        const fullTiles = [...hand, drawnTile];
+        if (!checkWin(fullTiles)) {
           if (autoDiscardTimer) clearTimeout(autoDiscardTimer);
           autoDiscardTimer = setTimeout(() => {
             if (!isGameOver && isRiichi) discard(null, true);
-          }, 300);
+          }, 350);
         }
       }
     }
@@ -419,20 +484,49 @@
       render();
     }
 
-    // 暗カン処理
-    function execKan() {
+    function onClickKanButton() {
       if (isGameOver) return;
-      const full14 = [...hand];
-      if (drawnTile) full14.push(drawnTile);
+      const fullTiles = [...hand];
+      if (drawnTile) fullTiles.push(drawnTile);
 
-      let counts = getTileCounts(full14);
-      let kanKey = Object.keys(counts).find(k => counts[k] === 4);
-      if (!kanKey) return;
+      let counts = getTileCounts(fullTiles);
+      let kanKeys = Object.keys(counts).filter(k => counts[k] === 4);
 
+      if (kanKeys.length === 0) return;
+
+      if (kanKeys.length === 1) {
+        execKan(kanKeys[0]);
+      } else {
+        showKanModal(kanKeys);
+      }
+    }
+
+    function showKanModal(kanKeys) {
+      const modal = document.getElementById('kan-modal');
+      const optionsContainer = document.getElementById('kan-options');
+      optionsContainer.innerHTML = '';
+
+      kanKeys.forEach(key => {
+        let [type, valStr] = key.split('_');
+        let tileObj = { type: type, val: parseInt(valStr), isAka: false };
+        let tileEl = createTileElement(tileObj, () => {
+          closeKanModal();
+          execKan(key);
+        });
+        optionsContainer.appendChild(tileEl);
+      });
+
+      modal.style.display = 'flex';
+    }
+
+    function closeKanModal() {
+      document.getElementById('kan-modal').style.display = 'none';
+    }
+
+    function execKan(kanKey) {
       let [type, valStr] = kanKey.split('_');
       let val = parseInt(valStr);
 
-      // カンした牌を取り除く
       if (drawnTile && drawnTile.type === type && drawnTile.val === val) {
         drawnTile = null;
       }
@@ -441,14 +535,12 @@
       kanCount++;
       playSE('sort');
 
-      // 新しいドラ表示牌をめくる
       if (deck.length > 0) {
         let newDoraInd = deck.pop();
         doraIndicators.push(newDoraInd);
         actualDoraTiles.push(getDoraFromIndicator(newDoraInd));
       }
 
-      // 四開槓（スーカイカン）流局チェック
       if (kanCount >= 4) {
         showMessage('流局（四開槓）', 'カンが4回行われたため流局となりました。', '');
         isGameOver = true;
@@ -456,14 +548,12 @@
         return;
       }
 
-      // 嶺上牌（補給牌）を引く
       drawTile();
       render();
     }
 
     function discard(index, isDrawn) {
       if (isGameOver) return;
-
       if (autoDiscardTimer) clearTimeout(autoDiscardTimer);
 
       let discarded;
@@ -502,52 +592,52 @@
     }
 
     function getTenpaiDiscards(hand13, currentDrawn) {
-      const full14 = [...hand13];
-      if (currentDrawn) full14.push(currentDrawn);
+      const fullTiles = [...hand13];
+      if (currentDrawn) fullTiles.push(currentDrawn);
 
       let validDiscardIndices = [];
-      for (let i = 0; i < full14.length; i++) {
-        let temp13 = full14.filter((_, idx) => idx !== i);
+      for (let i = 0; i < fullTiles.length; i++) {
+        let temp13 = fullTiles.filter((_, idx) => idx !== i);
         if (checkTenpai(temp13).length > 0) validDiscardIndices.push(i);
       }
       return validDiscardIndices;
     }
 
-    // テンパイ判定＆待ち牌リスト返却
-    function checkTenpai(hand13) {
+    function checkTenpai(handTiles) {
       const allPossibleTiles = [];
       ['m', 'p', 's'].forEach(s => { for(let n=1; n<=9; n++) allPossibleTiles.push({type:s, val:n}); });
       for(let n=1; n<=7; n++) allPossibleTiles.push({type:'z', val:n});
 
       let waitingTiles = [];
       for (let tile of allPossibleTiles) {
-        if (checkWin([...hand13, tile])) {
+        if (checkWin([...handTiles, tile])) {
           waitingTiles.push(tile);
         }
       }
       return waitingTiles;
     }
 
-    function checkWin(tiles14) {
-      let counts = getTileCounts(tiles14);
+    function checkWin(tiles) {
+      let counts = getTileCounts(tiles);
 
-      // 七対子
-      let pairCount = 0, isChitoi = true;
-      for (let k in counts) {
-        if (counts[k] === 2) pairCount++;
-        else if (counts[k] !== 0) isChitoi = false;
+      if (kanCount === 0) {
+        let pairCount = 0, isChitoi = true;
+        for (let k in counts) {
+          if (counts[k] === 2) pairCount++;
+          else if (counts[k] !== 0) isChitoi = false;
+        }
+        if (isChitoi && pairCount === 7) return true;
       }
-      if (isChitoi && pairCount === 7) return true;
 
-      // 国士無双
-      let yaochuTypes = 0, hasPair = false;
-      for (let k of YAOCHU_KEYS) {
-        if (counts[k] >= 1) yaochuTypes++;
-        if (counts[k] === 2) hasPair = true;
+      if (kanCount === 0) {
+        let yaochuTypes = 0, hasPair = false;
+        for (let k of YAOCHU_KEYS) {
+          if (counts[k] >= 1) yaochuTypes++;
+          if (counts[k] === 2) hasPair = true;
+        }
+        if (yaochuTypes === 13 && hasPair && Object.keys(counts).every(k => YAOCHU_KEYS.includes(k) ? counts[k] <= 2 : counts[k] === 0)) return true;
       }
-      if (yaochuTypes === 13 && hasPair && Object.keys(counts).every(k => YAOCHU_KEYS.includes(k) ? counts[k] <= 2 : counts[k] === 0)) return true;
 
-      // 通常形
       for (let k in counts) {
         if (counts[k] >= 2) {
           counts[k] -= 2;
@@ -588,55 +678,40 @@
       return counts;
     }
 
-    // --- 最大5倍役満対応 役判定ロジック ---
-    function evaluateHand(tiles14, isRiichiActive) {
-      let counts = getTileCounts(tiles14);
+    function evaluateHand(tiles, isRiichiActive) {
+      let counts = getTileCounts(tiles);
       let yakus = [];
 
-      // 国士無双
-      let yaochuTypes = 0, hasPair = false, kokushiPairKey = null;
-      for (let k of YAOCHU_KEYS) {
-        if (counts[k] >= 1) yaochuTypes++;
-        if (counts[k] === 2) { hasPair = true; kokushiPairKey = k; }
-      }
-      if (yaochuTypes === 13 && hasPair) {
-        if (drawnTile && `${drawnTile.type}_${drawnTile.val}` === kokushiPairKey) {
-          yakus.push({ name: '国士無双十三面待ち', han: 26, isDouble: true });
-        } else {
-          yakus.push({ name: '国士無双', han: 13 });
+      if (kanCount === 0) {
+        let yaochuTypes = 0, hasPair = false, kokushiPairKey = null;
+        for (let k of YAOCHU_KEYS) {
+          if (counts[k] >= 1) yaochuTypes++;
+          if (counts[k] === 2) { hasPair = true; kokushiPairKey = k; }
+        }
+        if (yaochuTypes === 13 && hasPair) {
+          if (drawnTile && `${drawnTile.type}_${drawnTile.val}` === kokushiPairKey) {
+            yakus.push({ name: '国士無双十三面待ち', han: 26, isDouble: true });
+          } else {
+            yakus.push({ name: '国士無双', han: 13 });
+          }
         }
       }
 
-      // 大三元
-      if (counts['z_5'] >= 3 && counts['z_6'] >= 3 && counts['z_7'] >= 3) {
-        yakus.push({ name: '大三元', han: 13 });
-      }
+      if (counts['z_5'] >= 3 && counts['z_6'] >= 3 && counts['z_7'] >= 3) yakus.push({ name: '大三元', han: 13 });
+      if (Object.keys(counts).every(k => k.startsWith('z') || counts[k] === 0)) yakus.push({ name: '字一色', han: 13 });
 
-      // 字一色
-      if (Object.keys(counts).every(k => k.startsWith('z') || counts[k] === 0)) {
-        yakus.push({ name: '字一色', han: 13 });
-      }
-
-      // 大四喜 / 小四喜
       let windKotsu = 0, windPair = 0;
       ['z_1','z_2','z_3','z_4'].forEach(k => {
         if (counts[k] >= 3) windKotsu++;
         if (counts[k] === 2) windPair++;
       });
-      if (windKotsu === 4) {
-        yakus.push({ name: '大四喜', han: 26, isDouble: true });
-      } else if (windKotsu === 3 && windPair === 1) {
-        yakus.push({ name: '小四喜', han: 13 });
-      }
+      if (windKotsu === 4) yakus.push({ name: '大四喜', han: 26, isDouble: true });
+      else if (windKotsu === 3 && windPair === 1) yakus.push({ name: '小四喜', han: 13 });
 
-      // 清老頭
       const chinrotoKeys = ['m_1','m_9','p_1','p_9','s_1','s_9'];
-      if (Object.keys(counts).every(k => chinrotoKeys.includes(k) || counts[k] === 0)) {
-        yakus.push({ name: '清老頭', han: 13 });
-      }
+      if (Object.keys(counts).every(k => chinrotoKeys.includes(k) || counts[k] === 0)) yakus.push({ name: '清老頭', han: 13 });
 
-      // 四暗刻 / 四暗刻単騎
-      let kotsuCount = 0;
+      let kotsuCount = kanCount; 
       for (let k in counts) if (counts[k] >= 3) kotsuCount++;
       if (kotsuCount === 4) {
         if (drawnTile && counts[`${drawnTile.type}_${drawnTile.val}`] === 2) {
@@ -646,63 +721,63 @@
         }
       }
 
-      // 九蓮宝燈 / 純正九蓮宝燈
-      ['m', 'p', 's'].forEach(suit => {
-        let isSuitOnly = Object.keys(counts).every(k => k.startsWith(suit) || counts[k] === 0);
-        if (isSuitOnly) {
-          let req = [3, 1, 1, 1, 1, 1, 1, 1, 3];
-          let current = [1,2,3,4,5,6,7,8,9].map(n => counts[`${suit}_${n}`] || 0);
-          let match = true;
-          for (let i = 0; i < 9; i++) if (current[i] < req[i]) match = false;
-          if (match) {
-            let drawnVal = drawnTile ? drawnTile.val : 0;
-            if (drawnVal > 0 && current[drawnVal - 1] === req[drawnVal - 1] + 1) {
-              yakus.push({ name: '純正九蓮宝燈', han: 26, isDouble: true });
-            } else {
-              yakus.push({ name: '九蓮宝燈', han: 13 });
+      if (kanCount === 0) {
+        ['m', 'p', 's'].forEach(suit => {
+          let isSuitOnly = Object.keys(counts).every(k => k.startsWith(suit) || counts[k] === 0);
+          if (isSuitOnly) {
+            let req = [3, 1, 1, 1, 1, 1, 1, 1, 3];
+            let current = [1,2,3,4,5,6,7,8,9].map(n => counts[`${suit}_${n}`] || 0);
+            let match = true;
+            for (let i = 0; i < 9; i++) if (current[i] < req[i]) match = false;
+            if (match) {
+              let drawnVal = drawnTile ? drawnTile.val : 0;
+              if (drawnVal > 0 && current[drawnVal - 1] === req[drawnVal - 1] + 1) {
+                yakus.push({ name: '純正九蓮宝燈', han: 26, isDouble: true });
+              } else {
+                yakus.push({ name: '九蓮宝燈', han: 13 });
+              }
             }
           }
-        }
-      });
+        });
+      }
 
-      // 役満（最大5倍まで計算）
       if (yakus.length > 0) {
         let doubleCount = 0;
         yakus.forEach(y => { doubleCount += (y.isDouble ? 2 : 1); });
-        if (doubleCount > 5) doubleCount = 5; // 最大5倍役満まで
+        if (doubleCount > 5) doubleCount = 5;
 
         let rawScore = 32000 * doubleCount;
         let scoreText = doubleCount > 1 ? `${doubleCount}倍役満 ${rawScore}点` : `役満 32000点`;
         return { yakus, rawScore, scoreText };
       }
 
-      // --- 通常役判定 ---
       yakus.push({ name: '門前清自摸和', han: 1 });
       if (isRiichiActive) yakus.push({ name: '立直', han: 1 });
 
-      let pairCount = 0;
-      for (let k in counts) if (counts[k] === 2) pairCount++;
-      let isChitoi = (pairCount === 7);
-      if (isChitoi) yakus.push({ name: '七対子', han: 2 });
+      if (kanCount === 0) {
+        let pairCount = 0;
+        for (let k in counts) if (counts[k] === 2) pairCount++;
+        let isChitoi = (pairCount === 7);
+        if (isChitoi) yakus.push({ name: '七対子', han: 2 });
+      }
 
       if (Object.keys(counts).every(k => !YAOCHU_KEYS.includes(k) || counts[k] === 0)) yakus.push({ name: '断幺九', han: 1 });
 
       if (counts['z_5'] >= 3) yakus.push({ name: '役牌：白', han: 1 });
       if (counts['z_6'] >= 3) yakus.push({ name: '役牌：發', han: 1 });
       if (counts['z_7'] >= 3) yakus.push({ name: '役牌：中', han: 1 });
-      if (counts['z_1'] >= 3) yakus.push({ name: '役牌：場風/自風 東', han: 2 }); // 東家（親）のためダブル東
+      if (counts['z_1'] >= 3) yakus.push({ name: '役牌：場風/自風 東', han: 2 });
 
       let usedSuits = new Set(), hasHonor = false;
-      tiles14.forEach(t => {
+      tiles.forEach(t => {
         if (t.type === 'z') hasHonor = true;
         else usedSuits.add(t.type);
       });
       if (usedSuits.size === 1 && !hasHonor) yakus.push({ name: '清一色', han: 6 });
       else if (usedSuits.size === 1 && hasHonor) yakus.push({ name: '混一色', han: 3 });
 
-      // ドラ・赤ドラ カウント
       let doraCount = 0, akaDoraCount = 0;
-      tiles14.forEach(t => {
+      tiles.forEach(t => {
         actualDoraTiles.forEach(dt => {
           if (t.type === dt.type && t.val === dt.val) doraCount++;
         });
@@ -713,7 +788,7 @@
       if (akaDoraCount > 0) yakus.push({ name: `赤ドラ ${akaDoraCount}`, han: akaDoraCount });
 
       let totalHan = yakus.reduce((sum, y) => sum + y.han, 0);
-      let fu = isChitoi ? 25 : 30;
+      let fu = (kanCount === 0 && yakus.some(y => y.name === '七対子')) ? 25 : 30;
 
       let { rawScore, scoreText } = calculateScore(totalHan, fu);
 
@@ -730,7 +805,7 @@
         rawScore = 12000; text = `親満貫 12000点 (${han}翻${fu}符)`;
       } else {
         let basePoint = fu * Math.pow(2, han + 2);
-        rawScore = Math.ceil((basePoint * 6) / 100) * 100; // 親のツモ上がり(6倍)
+        rawScore = Math.ceil((basePoint * 6) / 100) * 100;
         text = `親 ${rawScore}点 (オール ${Math.ceil((basePoint * 2) / 100) * 100}点) [${han}翻${fu}符]`;
       }
       return { rawScore, scoreText: text };
@@ -738,16 +813,24 @@
 
     async function checkAgari() {
       if (isGameOver) return;
-      const allTiles = [...hand];
-      if (drawnTile) allTiles.push(drawnTile);
+      const fullTiles = [...hand];
+      if (drawnTile) fullTiles.push(drawnTile);
 
-      if (allTiles.length !== 14) return;
+      let expectedCount = 14 - (kanCount * 3);
+      if (fullTiles.length !== expectedCount) return;
 
-      if (checkWin(allTiles)) {
+      if (checkWin(fullTiles)) {
         if (autoDiscardTimer) clearTimeout(autoDiscardTimer);
         playSE('win');
-        let res = evaluateHand(allTiles, isRiichi);
+        let res = evaluateHand(fullTiles, isRiichi);
         let yakuStr = res.yakus.map(y => `${y.name}`).join('・');
+        
+        lastWinResult = {
+          turn: turn,
+          scoreText: res.scoreText,
+          yaku: yakuStr
+        };
+
         showMessage(`🎉 ツモアガリ！（${turn}巡目）`, yakuStr, res.scoreText);
         isGameOver = true;
         render();
@@ -760,6 +843,20 @@
         playSE('error');
         showMessage('❌ チョンボ', 'まだアガリの形になっていません。', '');
       }
+    }
+
+    // --- X (Twitter) 共有関数 ---
+    function shareOnX() {
+      let text = '';
+      if (lastWinResult) {
+        text = `🀄【本格一人麻雀】\n${lastWinResult.turn}巡目でアガリ達成！\n【役】${lastWinResult.yaku}\n【得点】${lastWinResult.scoreText}\n\nみんなも遊んでみてね！`;
+      } else {
+        text = `🀄【本格一人麻雀】で遊んでいるよ！みんなもアガリを目指して挑戦しよう！`;
+      }
+      
+      const gameUrl = window.location.href;
+      const shareUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(gameUrl)}`;
+      window.open(shareUrl, '_blank');
     }
 
     // --- オンラインランキング通信処理 (Supabase) ---
@@ -835,22 +932,22 @@
       document.getElementById('deck-count').innerText = deck.length;
       document.getElementById('turn-count').innerText = turn;
 
-      // ドラ表示牌の描画（複数対応）
       const doraEl = document.getElementById('dora-tile-container');
       doraEl.innerHTML = '';
       doraIndicators.forEach(dInd => {
         doraEl.appendChild(createTileElement(dInd, null, true));
       });
 
-      const full14 = [...hand];
-      if (drawnTile) full14.push(drawnTile);
+      const fullTiles = [...hand];
+      if (drawnTile) fullTiles.push(drawnTile);
 
-      // テンパイ＆待ち牌表示
+      let expectedCount = 14 - (kanCount * 3);
+
       const waitsContainer = document.getElementById('waits-container');
       waitsContainer.innerHTML = '';
       if (!isGameOver) {
-        let currentHand13 = full14.length === 14 ? hand : full14;
-        let waits = checkTenpai(currentHand13);
+        let currentHandTiles = fullTiles.length === expectedCount ? hand : fullTiles;
+        let waits = checkTenpai(currentHandTiles);
         if (waits.length > 0) {
           waits.forEach(wTile => {
             waitsContainer.appendChild(createTileElement(wTile, null, true));
@@ -860,23 +957,20 @@
         }
       }
 
-      // 暗カン可能判定＆ボタン表示
       const btnKan = document.getElementById('btn-kan');
-      let tileCounts14 = getTileCounts(full14);
-      let canKan = Object.values(tileCounts14).some(cnt => cnt === 4);
+      let tileCounts = getTileCounts(fullTiles);
+      let canKan = (fullTiles.length === expectedCount) && Object.values(tileCounts).some(cnt => cnt === 4);
       btnKan.style.display = (canKan && !isGameOver) ? 'inline-block' : 'none';
 
-      // アガリ可能状態のチェック＆ボタン発光制御
       const btnWin = document.getElementById('btn-win');
-      if (full14.length === 14 && checkWin(full14) && !isGameOver) {
+      if (fullTiles.length === expectedCount && checkWin(fullTiles) && !isGameOver) {
         btnWin.classList.add('btn-win-glow');
       } else {
         btnWin.classList.remove('btn-win-glow');
       }
 
-      // リーチ可能判定
       let riichiDiscardIndices = [];
-      if (!isRiichi && !isGameOver && full14.length === 14) {
+      if (!isRiichi && !isGameOver && fullTiles.length === expectedCount) {
         riichiDiscardIndices = getTenpaiDiscards(hand, drawnTile);
       }
 
@@ -917,7 +1011,7 @@
     function createTileElement(tile, onClick, isSmall = false, isRiichiTarget = false) {
       const el = document.createElement('div');
       el.className = 'tile';
-      if (isSmall) { el.style.width = '28px'; el.style.height = '38px'; el.style.fontSize = '11px'; }
+      if (isSmall) el.classList.add('small');
       if (isRiichiTarget) el.classList.add('riichi-target');
       if (tile.isAka) el.classList.add('aka-dora');
 
